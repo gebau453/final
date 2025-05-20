@@ -1,31 +1,144 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "progect", "progect.vcxproj", "{7C275815-7694-4CA9-8C5E-5D6DA0630876}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Debug|x64.ActiveCfg = Debug|x64
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Debug|x64.Build.0 = Debug|x64
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Debug|x86.ActiveCfg = Debug|Win32
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Debug|x86.Build.0 = Debug|Win32
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Release|x64.ActiveCfg = Release|x64
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Release|x64.Build.0 = Release|x64
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Release|x86.ActiveCfg = Release|Win32
-		{7C275815-7694-4CA9-8C5E-5D6DA0630876}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {779EFBDC-20E0-42C1-BFB1-7D90FA20B185}
-	EndGlobalSection
-EndGlobal
+﻿#include <iostream>
+#include <ctime>
+#include <cstdlib>
+#include <windows.h>
+using namespace std;
+
+const int g_SIZE = 4;
+const char HIDDEN = '*';
+//вывод игрового поля
+void printField(char field[g_SIZE][g_SIZE], bool opened[g_SIZE][g_SIZE]) {// поле с буквами /уже открыты игроком.»
+
+
+    cout << "   ";
+    for (int i = 0; i < g_SIZE; i++) {
+        cout << i << " ";
+    }
+    cout << "\n";
+
+    for (int i = 0; i < g_SIZE; i++) {
+        cout << i << "  ";
+        for (int j = 0; j < g_SIZE; j++) {
+            if (opened[i][j]) {
+                cout << field[i][j] << " ";
+            }
+            else {
+                cout << HIDDEN << " ";
+            }
+        }
+        cout << "\n";
+    }
+}
+
+void shuffleField(char field[g_SIZE][g_SIZE]) {
+    // Создаем массив из пар букв
+    char letters[g_SIZE * g_SIZE];
+    for (int i = 0; i < (g_SIZE * g_SIZE) / 2; i++) {
+        letters[2 * i] = 'A' + i;
+        letters[2 * i + 1] = 'A' + i;
+    }
+
+    //  перемешивание обм
+    for (int i = g_SIZE * g_SIZE - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        char temp = letters[i];
+        letters[i] = letters[j];
+        letters[j] = temp;
+    }
+
+    // Заполнение поля
+    int index = 0;
+    for (int i = 0; i < g_SIZE; i++) {
+        for (int j = 0; j < g_SIZE; j++) {
+            field[i][j] = letters[index++];
+        }
+    }
+}
+// все ли ячейки открыты
+bool allOpened(bool opened[g_SIZE][g_SIZE]) {
+    for (int i = 0; i < g_SIZE; i++) {
+        for (int j = 0; j < g_SIZE; j++) {
+            if (!opened[i][j]) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+// ждать 
+void waitForEnter() {
+    cout << "Нажмите Enter для продолжения...";
+    cin.ignore();
+    cin.get();
+}
+
+int main() {
+    SetConsoleOutputCP(1251);
+    SetConsoleCP(1251);
+    srand(static_cast<unsigned>(time(nullptr)));
+
+    char field[g_SIZE][g_SIZE];
+    bool opened[g_SIZE][g_SIZE] = { false };
+
+    shuffleField(field);
+
+    int turns = 0;
+
+    while (!allOpened(opened)) {
+         //system("cls"); // если хочешь очистку экрана - раскомментируй для Windows
+
+        printField(field, opened);
+
+        int x1, y1, x2, y2;
+
+        cout << "Введите координаты первой ячейки (x y): ";
+        cin >> x1 >> y1;
+        cout << "Введите координаты второй ячейки (x y): ";
+        cin >> x2 >> y2;
+
+        if (x1 == x2 && y1 == y2) {
+            cout << "Нельзя выбирать одну и ту же ячейку!\n";
+            waitForEnter();
+            continue;
+        }
+
+        if (x1 < 0 || x1 >= g_SIZE || y1 < 0 || y1 >= g_SIZE ||
+            x2 < 0 || x2 >= g_SIZE || y2 < 0 || y2 >= g_SIZE) {
+            cout << "Координаты вне поля!\n";
+            waitForEnter();
+            continue;
+        }
+
+        if (opened[x1][y1] || opened[x2][y2]) {
+            cout << "Одна из выбранных ячеек уже открыта!\n";
+            waitForEnter();
+            continue;
+        }
+
+        // Показываем открытые значения
+        opened[x1][y1] = true;
+        opened[x2][y2] = true;
+
+        
+
+        printField(field, opened);
+
+        if (field[x1][y1] == field[x2][y2]) {
+            cout << "Вы нашли пару!\n";
+        }
+        else {
+            cout << "Не совпадает :(\n";
+            opened[x1][y1] = false;
+            opened[x2][y2] = false;
+        }
+
+        turns++;
+        waitForEnter();
+    }
+
+    
+    printField(field, opened);
+    cout << "\nПоздравляем! Все пары найдены за " << turns << " ходов.\n";
+
+    
+}
